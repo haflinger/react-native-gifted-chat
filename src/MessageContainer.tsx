@@ -15,6 +15,7 @@ import {
   StyleProp,
   ViewStyle,
   Platform,
+  EmitterSubscription,
 } from 'react-native'
 
 import LoadEarlier from './LoadEarlier'
@@ -97,6 +98,12 @@ interface State {
 export default class MessageContainer<
   TMessage extends IMessage = IMessage
 > extends React.PureComponent<MessageContainerProps<TMessage>, State> {
+
+  keyboardWillShowSubscription: EmitterSubscription | null = null;
+  keyboardDidShowSubscription: EmitterSubscription | null = null;
+  keyboardWillHideSubscription: EmitterSubscription | null = null;
+  keyboardDidHideSubscription: EmitterSubscription | null = null;
+
   static defaultProps = {
     messages: [],
     user: {},
@@ -176,37 +183,18 @@ export default class MessageContainer<
   attachKeyboardListeners = () => {
     const { invertibleScrollViewProps: invertibleProps } = this.props
     if (invertibleProps) {
-      Keyboard.addListener(
-        'keyboardWillShow',
-        invertibleProps.onKeyboardWillShow,
-      )
-      Keyboard.addListener('keyboardDidShow', invertibleProps.onKeyboardDidShow)
-      Keyboard.addListener(
-        'keyboardWillHide',
-        invertibleProps.onKeyboardWillHide,
-      )
-      Keyboard.addListener('keyboardDidHide', invertibleProps.onKeyboardDidHide)
+      this.keyboardWillShowSubscription = Keyboard.addListener('keyboardWillShow', invertibleProps.onKeyboardWillShow);
+      this.keyboardDidShowSubscription = Keyboard.addListener('keyboardDidShow', invertibleProps.onKeyboardDidShow);
+      this.keyboardWillHideSubscription = Keyboard.addListener('keyboardWillHide', invertibleProps.onKeyboardWillHide);
+      this.keyboardDidHideSubscription = Keyboard.addListener('keyboardDidHide', invertibleProps.onKeyboardDidHide);
     }
   }
 
   detachKeyboardListeners = () => {
-    const { invertibleScrollViewProps: invertibleProps } = this.props
-    Keyboard.removeListener(
-      'keyboardWillShow',
-      invertibleProps.onKeyboardWillShow,
-    )
-    Keyboard.removeListener(
-      'keyboardDidShow',
-      invertibleProps.onKeyboardDidShow,
-    )
-    Keyboard.removeListener(
-      'keyboardWillHide',
-      invertibleProps.onKeyboardWillHide,
-    )
-    Keyboard.removeListener(
-      'keyboardDidHide',
-      invertibleProps.onKeyboardDidHide,
-    )
+    this.keyboardWillShowSubscription?.remove()
+    this.keyboardDidShowSubscription?.remove()
+    this.keyboardWillHideSubscription?.remove()
+    this.keyboardDidHideSubscription?.remove()
   }
 
   renderTypingIndicator = () => {
